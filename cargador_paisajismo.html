@@ -507,15 +507,23 @@
           </select>
         </div>
         <div>
-          <label>Versión</label>
-          <input type="text" id="oferta-version" placeholder="Ej: V1, V2, V3">
+          <label>Proyecto *</label>
+          <select id="oferta-proyecto">
+            <option value="">Cargando proyectos...</option>
+          </select>
         </div>
       </div>
       <div class="form-row">
         <div>
+          <label>Versión</label>
+          <input type="text" id="oferta-version" placeholder="Ej: V1, V2, V3">
+        </div>
+        <div>
           <label>Fecha de oferta</label>
           <input type="date" id="oferta-fecha">
         </div>
+      </div>
+      <div class="form-row">
         <div>
           <label>Estado</label>
           <select id="oferta-estado">
@@ -524,6 +532,9 @@
             <option value="Adjudicada">Adjudicada</option>
             <option value="Descartada">Descartada</option>
           </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
         </div>
       </div>
     </div>
@@ -664,6 +675,7 @@ const BASE = 'appfsrASQlNSOye1w';
 const TBL_OFERTAS = 'tblJpiKTlPajacHN7';
 const TBL_LINEAS = 'tbldvqTWGzYyQ1w5F';
 const TBL_PROVEEDORES = 'tblIMzPqPQQOZKmYe';
+const TBL_PROYECTOS = 'tblyusZHrEpAz3NkB';
 
 let lineas = [];
 let ofertaId = null;
@@ -1001,6 +1013,7 @@ function volverPaso1() {
 async function iniciarCarga() {
   const nombre = document.getElementById('oferta-nombre').value.trim();
   const proveedor = document.getElementById('oferta-proveedor').value;
+  const proyecto = document.getElementById('oferta-proyecto').value;
   const version = document.getElementById('oferta-version').value.trim();
   const fecha = document.getElementById('oferta-fecha').value;
   const estado = document.getElementById('oferta-estado').value;
@@ -1008,6 +1021,7 @@ async function iniciarCarga() {
 
   if (!nombre) { showStatus('Falta el nombre de la oferta.', 'warning'); return; }
   if (!proveedor) { showStatus('Seleccioná un proveedor.', 'warning'); return; }
+  if (!proyecto) { showStatus('Seleccioná un proyecto.', 'warning'); return; }
 
   document.getElementById('btn-cargar').disabled = true;
   showStatus('Creando registro de oferta en Airtable...', 'info', true);
@@ -1015,6 +1029,7 @@ async function iniciarCarga() {
   try {
     const campos = { 'Nombre oferta': nombre };
     if (proveedor) campos['Proveedor'] = [proveedor];
+    if (proyecto) campos['Proyecto'] = [proyecto];
     if (version) campos['Versión'] = version;
     if (fecha) campos['Fecha oferta'] = fecha;
     if (estado) campos['Status oferta'] = estado;
@@ -1129,6 +1144,22 @@ function nuevaOferta() {
   setStep(1);
 }
 
+async function cargarProyectos() {
+  const sel = document.getElementById('oferta-proyecto');
+  try {
+    const data = await airtableFetch(BASE + '/' + TBL_PROYECTOS + '?fields[]=Nombre+del+proyecto');
+    sel.innerHTML = '<option value="">Seleccioná un proyecto</option>';
+    (data.records || []).forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.fields['Nombre del proyecto'] || r.id;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    sel.innerHTML = '<option value="">Error al cargar proyectos</option>';
+  }
+}
+
 function copiarPrompt() {
   const txt = document.getElementById('prompt-claude').innerText;
   navigator.clipboard.writeText(txt).then(() => {
@@ -1139,6 +1170,7 @@ function copiarPrompt() {
 }
 
 cargarProveedores();
+cargarProyectos();
 document.getElementById('oferta-fecha').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
