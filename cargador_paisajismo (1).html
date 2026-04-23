@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cargador de Ofertas — Paisajismo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+  :root {
+    --green-deep: #1a3a2a;
+    --green-mid: #2d6a4f;
+    --green-light: #52b788;
+    --green-pale: #d8f3dc;
+    --green-ghost: #f0faf2;
+    --amber: #e9c46a;
+    --amber-dark: #c9a227;
+    --red: #e63946;
+    --gray-dark: #1a1a1a;
+    --gray-mid: #4a4a4a;
+    --gray-light: #e8e8e8;
+    --gray-ghost: #f7f7f5;
+    --white: #fefefe;
+    --mono: 'DM Mono', monospace;
+    --serif: 'Fraunces', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--mono);
+    background: var(--gray-ghost);
+    color: var(--gray-dark);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--green-deep);
+    padding: 24px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 3px solid var(--green-light);
+  }
+
+  .logo {
+    width: 40px; height: 40px;
+    background: var(--green-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  header h1 {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 22px;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  header span {
+    font-size: 11px;
+    color: var(--green-light);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--green-deep);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-light);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .form-row.full { grid-template-columns: 1fr; }
+
+  label {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray-mid);
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--gray-light);
+    border-radius: 7px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--gray-dark);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--green-light);
+    box-shadow: 0 0 0 3px rgba(82,183,136,0.1);
+  }
+
+  .drop-zone {
+    border: 2px dashed var(--green-light);
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--green-ghost);
+    position: relative;
+  }
+
+  .drop-zone:hover, .drop-zone.dragover {
+    background: var(--green-pale);
+    border-color: var(--green-mid);
+  }
+
+  .drop-zone input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+
+  .drop-icon { font-size: 36px; margin-bottom: 10px; }
+
+  .drop-text {
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--green-mid);
+    margin-bottom: 4px;
+  }
+
+  .drop-sub { font-size: 12px; color: var(--gray-mid); }
+
+  .file-name {
+    font-size: 12px;
+    color: var(--green-mid);
+    margin-top: 10px;
+    font-weight: 500;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 8px;
+    border: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-primary {
+    background: var(--green-deep);
+    color: var(--white);
+  }
+
+  .btn-primary:hover { background: var(--green-mid); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--green-mid);
+    border: 1px solid var(--green-light);
+  }
+
+  .btn-secondary:hover { background: var(--green-ghost); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid #fca5a5;
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .btn-danger:hover { background: #fef2f2; }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .status-bar.info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .status-bar.success { background: var(--green-ghost); color: var(--green-mid); border: 1px solid var(--green-pale); }
+  .status-bar.error { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
+  .status-bar.warning { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    margin-top: 16px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  th {
+    background: var(--green-deep);
+    color: var(--white);
+    padding: 9px 12px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--gray-light);
+    color: var(--gray-dark);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--gray-ghost); }
+  tr:hover td { background: var(--green-ghost); }
+
+  td input, td select {
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 5px;
+    min-width: 80px;
+  }
+
+  .row-status {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  .row-status.pending { background: var(--gray-light); }
+  .row-status.loading { background: var(--amber); animation: pulse 1s infinite; }
+  .row-status.ok { background: var(--green-light); }
+  .row-status.err { background: var(--red); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .summary-card {
+    background: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .summary-num {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--green-deep);
+  }
+
+  .summary-label {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-mid);
+    margin-top: 2px;
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .tag-tree { background: #dcfce7; color: #166534; }
+  .tag-plant { background: #d1fae5; color: #065f46; }
+  .tag-cover { background: #fef9c3; color: #854d0e; }
+  .tag-sub { background: #f3f4f6; color: #374151; }
+  .tag-mo { background: #ede9fe; color: #5b21b6; }
+  .tag-trans { background: #fce7f3; color: #9d174d; }
+
+  .progress-wrap {
+    background: var(--gray-light);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--green-light);
+    border-radius: 4px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  .step-indicator {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+  }
+
+  .step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+  }
+
+  .step::after {
+    content: '';
+    position: absolute;
+    top: 13px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--gray-light);
+    z-index: 0;
+  }
+
+  .step:last-child::after { display: none; }
+
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--gray-light);
+    color: var(--gray-mid);
+    font-size: 12px;
+    font-weight: 500;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 6px;
+    position: relative; z-index: 1;
+    transition: all 0.2s;
+  }
+
+  .step.active .step-dot { background: var(--green-deep); color: var(--white); }
+  .step.done .step-dot { background: var(--green-light); color: var(--white); }
+  .step.done::after { background: var(--green-light); }
+
+  .step-name {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray-mid);
+  }
+
+  .step.active .step-name { color: var(--green-deep); font-weight: 500; }
+
+  #section-1, #section-2, #section-3 { display: none; }
+  #section-1.active, #section-2.active, #section-3.active { display: block; }
+
+  .extraction-preview {
+    background: var(--gray-ghost);
+    border: 1px solid var(--gray-light);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 12px;
+    white-space: pre-wrap;
+    color: var(--gray-mid);
+  }
+
+  .badge-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--green-pale);
+    color: var(--green-deep);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 1px 8px;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🌿</div>
+  <div>
+    <h1>Cargador de Ofertas</h1>
+    <span>Paisajismo · Repositorio de precios</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="step-indicator">
+    <div class="step active" id="step-1">
+      <div class="step-dot">1</div>
+      <div class="step-name">Oferta</div>
+    </div>
+    <div class="step" id="step-2">
+      <div class="step-dot">2</div>
+      <div class="step-name">Revisión</div>
+    </div>
+    <div class="step" id="step-3">
+      <div class="step-dot">3</div>
+      <div class="step-name">Carga</div>
+    </div>
+  </div>
+
+  <div id="status-bar" class="status-bar"></div>
+
+  <!-- SECCIÓN 1: datos de la oferta + PDF -->
+  <div id="section-1" class="active">
+    <div class="section-label">Paso 1 — Datos de la oferta</div>
+
+    <div class="card">
+      <div class="card-title">Información general</div>
+      <div class="form-row">
+        <div>
+          <label>Nombre de la oferta *</label>
+          <input type="text" id="oferta-nombre" placeholder="Ej: Savia Norte V2 — Ecoterra">
+        </div>
+        <div>
+          <label>Número de oferta</label>
+          <input type="text" id="oferta-numero" placeholder="Ej: 137-26">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Proveedor *</label>
+          <select id="oferta-proveedor">
+            <option value="">Cargando proveedores...</option>
+          </select>
+        </div>
+        <div>
+          <label>Proyecto *</label>
+          <select id="oferta-proyecto">
+            <option value="">Cargando proyectos...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Versión</label>
+          <input type="text" id="oferta-version" placeholder="Ej: V1, V2, V3">
+        </div>
+        <div>
+          <label>Fecha de oferta</label>
+          <input type="date" id="oferta-fecha">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Estado</label>
+          <select id="oferta-estado">
+            <option value="Recibida">Recibida</option>
+            <option value="En evaluación">En evaluación</option>
+            <option value="Adjudicada">Adjudicada</option>
+            <option value="Descartada">Descartada</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Paso 1 — Copiá este prompt y pegalo en Claude junto con el PDF</div>
+      <div style="background:var(--green-ghost);border:1px solid var(--green-pale);border-radius:8px;padding:14px;margin-bottom:14px;font-size:12px;line-height:1.7;color:var(--gray-dark);white-space:pre-wrap;font-family:var(--mono)" id="prompt-claude">Tenés adjunto un PDF de oferta de paisajismo. Extraé todos los datos y devolvé ÚNICAMENTE una tabla markdown con pipes, sin texto antes ni después, con este formato exacto y en este orden:
+
+| Nombre común | Nombre científico | Tipo | Tamaño | Cantidad | Precio unitario | Moneda |
+
+Reglas OBLIGATORIAS:
+- El orden de columnas debe ser EXACTAMENTE ese — no cambies el orden
+- Tipo debe ser: Árbol, Planta, Cobertura, Sustrato, MO o Transporte
+- Cantidad es OBLIGATORIA — si no está en el PDF poné 1
+- Precio unitario es el precio por unidad, sin IVA
+- Moneda: USD o CRC
+- Incluí todas las secciones: plantas, árboles, coberturas, sustrato, mano de obra, transporte
+- Sin filas de encabezado repetidas, sin fila de totales, solo los datos
+- Sin texto antes ni después de la tabla
+
+Ejemplo de formato correcto:
+| Cedro María | Calophyllum brasiliense | Árbol | 150-200 cm | 4 | 30.74 | USD |
+| Coralillo | Hamelia Patens | Planta | 60-80 cm | 109 | 3.59 | USD |
+| Wedelia | Chagneticola trilobata | Cobertura | 10-15 cm | 500 | 0.30 | USD |</div>
+      <button class="btn btn-secondary" onclick="copiarPrompt()" id="btn-copiar" style="margin-bottom:16px">Copiar prompt →</button>
+
+      <div class="card-title" style="margin-bottom:12px">Paso 2 — Pegá la respuesta de Claude aquí</div>
+      <p style="font-size:12px;color:var(--gray-mid);margin-bottom:10px;line-height:1.6">
+        Después de que Claude procese el PDF, copiá la tabla que devolvió y pegala acá.
+      </p>
+      <textarea id="raw-text" rows="8" placeholder="| Coralillo | Hamelia Patens | Planta | 60-80 cm | 109 | 3.59 | USD | 391.31 |&#10;| Copey | Clusia Rosea | Planta | 40-60 cm | 50 | 7.46 | USD | 373.00 |&#10;| Cedro María | Calophyllum brasiliense | Árbol | 150-200 cm | 4 | 30.74 | USD | 122.95 |"></textarea>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:center">
+        <button class="btn btn-primary" onclick="parsearTabla()">Procesar →</button>
+        <span style="font-size:11px;color:var(--gray-mid)">La app lee la tabla y la prepara para cargar</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2: revisión de líneas -->
+  <div id="section-2">
+    <div class="section-label">Paso 2 — Revisá y corregí las líneas antes de cargar</div>
+
+    <div class="summary-bar">
+      <div class="summary-card">
+        <div class="summary-num" id="cnt-total">0</div>
+        <div class="summary-label">Líneas totales</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="cnt-precio">0</div>
+        <div class="summary-label">Con precio</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="cnt-total-val">—</div>
+        <div class="summary-label">Total oferta</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Líneas de la oferta <span id="lineas-badge" class="badge-count">0</span></div>
+      <div class="table-wrap">
+        <table id="tabla-lineas">
+          <thead>
+            <tr>
+              <th>Estado</th>
+              <th>Nombre común</th>
+              <th>Nombre científico</th>
+              <th>Tipo</th>
+              <th>Tamaño</th>
+              <th>Cant.</th>
+              <th>Precio unit.</th>
+              <th>Moneda</th>
+              <th>Total</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-body"></tbody>
+        </table>
+      </div>
+      <div class="actions-row">
+        <button class="btn btn-secondary" onclick="volverPaso1()">← Volver</button>
+        <button class="btn btn-primary" onclick="iniciarCarga()" id="btn-cargar">Cargar en Airtable →</button>
+        <div style="margin-left:auto;font-size:11px;color:var(--gray-mid)">Podés editar cualquier campo antes de cargar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 3: resultado de carga -->
+  <div id="section-3">
+    <div class="section-label">Paso 3 — Resultado de la carga</div>
+
+    <div class="summary-bar">
+      <div class="summary-card">
+        <div class="summary-num" id="res-ok" style="color:var(--green-mid)">0</div>
+        <div class="summary-label">Cargadas OK</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="res-err" style="color:var(--red)">0</div>
+        <div class="summary-label">Con error</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="res-total">0</div>
+        <div class="summary-label">Total intentadas</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Detalle de la carga</div>
+      <div class="progress-wrap" style="margin-bottom:16px">
+        <div class="progress-fill" id="prog-fill"></div>
+      </div>
+      <div class="table-wrap">
+        <table id="tabla-resultado">
+          <thead>
+            <tr>
+              <th>Estado</th>
+              <th>Nombre común</th>
+              <th>Tipo</th>
+              <th>Precio unit.</th>
+              <th>Total</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody id="resultado-body"></tbody>
+        </table>
+      </div>
+      <div class="actions-row" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="nuevaOferta()">Cargar otra oferta →</button>
+        <a href="https://airtable.com/appfsrASQlNSOye1w" target="_blank" class="btn btn-secondary">Ver en Airtable ↗</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const TOKEN = 'patuOM1Q2aDqG2uPd.b3afefaed951ca583d025e78b18b6190b708623bc111ebf340e5d786ddcd9535';
+const BASE = 'appfsrASQlNSOye1w';
+const TBL_OFERTAS = 'tblJpiKTlPajacHN7';
+const TBL_LINEAS = 'tbldvqTWGzYyQ1w5F';
+const TBL_PROVEEDORES = 'tblIMzPqPQQOZKmYe';
+const TBL_PROYECTOS = 'tblyusZHrEpAz3NkB';
+
+let lineas = [];
+let ofertaId = null;
+
+async function airtableFetch(url, opts = {}) {
+  const res = await fetch('https://api.airtable.com/v0/' + url, {
+    ...opts,
+    headers: {
+      'Authorization': 'Bearer ' + TOKEN,
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    }
+  });
+  return res.json();
+}
+
+function showStatus(msg, type = 'info', loading = false) {
+  const bar = document.getElementById('status-bar');
+  bar.style.display = 'flex';
+  bar.className = 'status-bar ' + type;
+  bar.innerHTML = (loading ? '<div class="spinner"></div>' : '') + '<span>' + msg + '</span>';
+}
+
+function hideStatus() {
+  document.getElementById('status-bar').style.display = 'none';
+}
+
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('section-' + i).className = i === n ? 'active' : '';
+    const s = document.getElementById('step-' + i);
+    s.className = 'step' + (i === n ? ' active' : i < n ? ' done' : '');
+  });
+}
+
+async function cargarProveedores() {
+  const sel = document.getElementById('oferta-proveedor');
+  try {
+    const data = await airtableFetch(BASE + '/' + TBL_PROVEEDORES + '?fields[]=Proveedor');
+    sel.innerHTML = '<option value="">Seleccioná un proveedor</option>';
+    (data.records || []).forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.fields['Proveedor'] || r.id;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    sel.innerHTML = '<option value="">Error al cargar — verificá conexión</option>';
+  }
+}
+
+function detectarFormato(raw) {
+  if (raw.includes('|')) return 'pipes';
+  if (raw.includes('\t')) return 'tabs';
+  return 'concatenado';
+}
+
+function parsearConcatenado(raw) {
+  const tipos = ['Árbol','Arbol','Planta','Cobertura','Sustrato','Palma','MO','Transporte'];
+  const tipoReg = new RegExp('(' + tipos.join('|') + ')', 'i');
+  const monedaReg = /\b(USD|CRC)\b/i;
+  const precioReg = /\$?([\d,]+\.?\d*)/g;
+  const tallaReg = /(\d+[\–\-]\d+\s*cm|\d+\s*cm)/i;
+
+  const resultados = [];
+  const chunks = raw.split(tipoReg).filter(s => s.trim());
+
+  for (let i = 0; i < chunks.length; i++) {
+    const tipoMatch = chunks[i].match(tipoReg);
+    if (!tipoMatch) continue;
+
+    const bloque = (chunks[i-1] || '') + chunks[i] + (chunks[i+1] || '');
+    const precios = [];
+    let m;
+    const rCopy = new RegExp(precioReg.source, 'g');
+    while ((m = rCopy.exec(bloque)) !== null) {
+      const v = parseFloat(m[1].replace(/,/g,''));
+      if (v > 0 && v < 1000000) precios.push(v);
+    }
+
+    const tallaM = bloque.match(tallaReg);
+    const monedaM = bloque.match(monedaReg);
+    const antes = chunks[i-1] || '';
+    const palabras = antes.trim().split(/(?=[A-ZÁÉÍÓÚÑ])/).filter(Boolean);
+
+    resultados.push({
+      nombreComun: palabras[0] ? palabras[0].trim() : '',
+      nombreCientifico: palabras[1] ? palabras[1].trim() : '',
+      tipo: normalizarTipo(tipoMatch[1]),
+      tamano: tallaM ? tallaM[1].trim() : '',
+      cantidad: precios[0] && Number.isInteger(precios[0]) ? precios[0] : (precios.length > 1 ? precios[0] : 1),
+      precioUnit: precios.length >= 2 ? precios[1] : (precios[0] || 0),
+      moneda: monedaM ? monedaM[1].toUpperCase() : 'USD',
+      notas: '',
+      status: 'pending'
+    });
+  }
+  return resultados;
+}
+
+function parsearPipes(raw) {
+  const rows = raw.split('\n').filter(l => l.trim().startsWith('|'));
+  const dataRows = rows.filter(l => !l.match(/^\s*\|[\s\-|]+\|\s*$/));
+  const result = [];
+  dataRows.forEach((row, idx) => {
+    if (idx === 0 && row.toLowerCase().includes('nombre')) return;
+    const cells = row.split('|').map(c => c.trim()).filter((c, i, a) => i > 0 && i < a.length - 1);
+    if (cells.length < 3) return;
+    const precio = parseFloat((cells[5] || '').replace(/[^0-9.]/g, '')) || 0;
+    const cant = parseFloat((cells[4] || '').replace(/[^0-9.]/g, '')) || 0;
+    result.push({
+      nombreComun: cells[0] || '',
+      nombreCientifico: cells[1] || '',
+      tipo: normalizarTipo(cells[2] || cells[3] || 'Planta'),
+      tamano: cells[3] || '',
+      cantidad: cant,
+      precioUnit: precio,
+      moneda: detectarMoneda(cells[6] || cells[7] || ''),
+      notas: cells[8] || cells[9] || '',
+      status: 'pending'
+    });
+  });
+  return result;
+}
+
+function parsearTabs(raw) {
+  const rows = raw.split('\n').filter(l => l.trim() && l.includes('\t'));
+  const result = [];
+  rows.forEach((row, idx) => {
+    if (idx === 0 && row.toLowerCase().includes('nombre')) return;
+    const cells = row.split('\t').map(c => c.trim());
+    if (cells.length < 3) return;
+    const precio = parseFloat((cells[5] || '').replace(/[^0-9.]/g, '')) || 0;
+    const cant = parseFloat((cells[4] || '').replace(/[^0-9.]/g, '')) || 0;
+    result.push({
+      nombreComun: cells[0] || '',
+      nombreCientifico: cells[1] || '',
+      tipo: normalizarTipo(cells[2] || cells[3] || 'Planta'),
+      tamano: cells[3] || '',
+      cantidad: cant,
+      precioUnit: precio,
+      moneda: detectarMoneda(cells[6] || ''),
+      notas: cells[8] || '',
+      status: 'pending'
+    });
+  });
+  return result;
+}
+
+function parsearTextoLibre(raw) {
+  const lineasTexto = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const result = [];
+  const precioReg = /\$?([\d,]+\.?\d{2})/g;
+  const tallaReg = /(\d+[\–\-–]\d+\s*cm|\d+\s*cm)/i;
+  const monedaReg = /\b(USD|CRC)\b/i;
+
+  lineasTexto.forEach(l => {
+    if (l.toLowerCase().includes('nombre') && l.toLowerCase().includes('tipo')) return;
+    const precios = [];
+    let m;
+    const rCopy = new RegExp(precioReg.source, 'g');
+    while ((m = rCopy.exec(l)) !== null) {
+      const v = parseFloat(m[1].replace(/,/g,''));
+      if (v > 0) precios.push(v);
+    }
+    if (precios.length === 0) return;
+
+    const tallaM = l.match(tallaReg);
+    const monedaM = l.match(monedaReg);
+    const partes = l.replace(precioReg, '').replace(tallaReg, '').replace(monedaReg,'').split(/\s{2,}|\t/).map(p=>p.trim()).filter(Boolean);
+
+    result.push({
+      nombreComun: partes[0] || '',
+      nombreCientifico: partes[1] || '',
+      tipo: normalizarTipo(partes[2] || 'Planta'),
+      tamano: tallaM ? tallaM[1] : '',
+      cantidad: precios.length >= 2 ? precios[0] : 1,
+      precioUnit: precios.length >= 2 ? precios[1] : precios[0],
+      moneda: monedaM ? monedaM[1].toUpperCase() : 'USD',
+      notas: '',
+      status: 'pending'
+    });
+  });
+  return result;
+}
+
+function parsearTabla() {
+  const raw = document.getElementById('raw-text').value.trim();
+  if (!raw) { showStatus('Pegá el texto de Claude antes de procesar.', 'warning'); return; }
+
+  const nombre = document.getElementById('oferta-nombre').value.trim();
+  if (!nombre) { showStatus('Completá el nombre de la oferta antes de continuar.', 'warning'); return; }
+
+  const formato = detectarFormato(raw);
+  let parsed = [];
+
+  if (formato === 'pipes') {
+    parsed = parsearPipes(raw);
+  } else if (formato === 'tabs') {
+    parsed = parsearTabs(raw);
+  } else {
+    parsed = parsearConcatenado(raw);
+    if (parsed.length === 0) parsed = parsearTextoLibre(raw);
+  }
+
+  lineas = parsed;
+
+  if (lineas.length === 0) {
+    showStatus('No se pudieron leer líneas. Probá pedirle a Claude que devuelva la tabla con | entre columnas, o revisá que el texto tenga datos de plantas.', 'error');
+    return;
+  }
+
+  showStatus('Formato detectado: ' + formato + ' · ' + lineas.length + ' líneas leídas', 'success');
+
+  renderTabla();
+  actualizarSummary();
+  setStep(2);
+  document.getElementById('btn-cargar').disabled = false;
+  setTimeout(hideStatus, 3000);
+}
+
+function parsearTabla_UNUSED() {
+  const raw = '';
+  const nombre = '';
+  lineas = [];
+  const dataRows = [];
+  dataRows.forEach((row, idx) => {
+    if (idx === 0 && row.toLowerCase().includes('nombre')) return;
+    const cells = row.split('|').map(c => c.trim()).filter((c, i, a) => i > 0 && i < a.length - 1);
+    if (cells.length < 3) return;
+
+    const precio = parseFloat((cells[5] || '').replace(/[^0-9.]/g, '')) || 0;
+    const cant = parseFloat((cells[4] || '').replace(/[^0-9.]/g, '')) || 0;
+
+    lineas.push({
+      nombreComun: cells[0] || '',
+      nombreCientifico: cells[1] || '',
+      tipo: normalizarTipo(cells[2] || cells[3] || 'Planta'),
+      tamano: cells[3] || cells[2] || '',
+      cantidad: cant,
+      precioUnit: precio,
+      moneda: detectarMoneda(cells[6] || cells[7] || ''),
+      notas: cells[8] || cells[9] || '',
+      status: 'pending'
+    });
+  });
+
+  if (lineas.length === 0) {
+    showStatus('No se pudieron leer líneas. Asegurate de pegar la tabla con formato | col1 | col2 |...', 'error');
+    return;
+  }
+
+  renderTabla();
+  actualizarSummary();
+  setStep(2);
+  hideStatus();
+}
+
+function normalizarTipo(t) {
+  t = t.toLowerCase();
+  if (t.includes('árbol') || t.includes('arbol')) return 'Árbol';
+  if (t.includes('cobertura')) return 'Cobertura';
+  if (t.includes('sustrato') || t.includes('tierra')) return 'Sustrato';
+  if (t.includes('transporte')) return 'Transporte';
+  if (t.includes('mano') || t.includes(' mo') || t.includes('instalac')) return 'MO';
+  if (t.includes('palma')) return 'Palma';
+  return 'Planta';
+}
+
+function detectarMoneda(s) {
+  if (s.toLowerCase().includes('usd') || s.includes('$')) return 'USD';
+  if (s.toLowerCase().includes('crc') || s.includes('₡')) return 'CRC';
+  return 'USD';
+}
+
+function tipoTag(tipo) {
+  const map = { 'Árbol':'tree','Planta':'plant','Cobertura':'cover','Sustrato':'sub','MO':'mo','Transporte':'trans','Palma':'tree' };
+  const cl = map[tipo] || 'plant';
+  return `<span class="tag tag-${cl}">${tipo}</span>`;
+}
+
+function renderTabla() {
+  const tbody = document.getElementById('tabla-body');
+  tbody.innerHTML = '';
+  lineas.forEach((l, i) => {
+    const total = (l.cantidad * l.precioUnit).toFixed(2);
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + i;
+    tr.innerHTML = `
+      <td><span class="row-status pending" id="st-${i}"></span></td>
+      <td><input value="${l.nombreComun}" oninput="lineas[${i}].nombreComun=this.value" style="min-width:130px"></td>
+      <td><input value="${l.nombreCientifico}" oninput="lineas[${i}].nombreCientifico=this.value;this.value=this.value" style="min-width:130px"></td>
+      <td>
+        <select onchange="lineas[${i}].tipo=this.value;actualizarSummary()">
+          ${['Planta','Árbol','Cobertura','Sustrato','MO','Transporte','Palma'].map(t=>`<option ${t===l.tipo?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </td>
+      <td><input value="${l.tamano}" oninput="lineas[${i}].tamano=this.value" style="min-width:80px"></td>
+      <td><input type="number" value="${l.cantidad}" oninput="lineas[${i}].cantidad=+this.value;actualizarSummary()" style="min-width:60px"></td>
+      <td><input type="number" step="0.01" value="${l.precioUnit}" oninput="lineas[${i}].precioUnit=+this.value;actualizarSummary()" style="min-width:80px"></td>
+      <td>
+        <select onchange="lineas[${i}].moneda=this.value">
+          <option ${l.moneda==='USD'?'selected':''}>USD</option>
+          <option ${l.moneda==='CRC'?'selected':''}>CRC</option>
+        </select>
+      </td>
+      <td>${total}</td>
+      <td><button class="btn btn-danger" onclick="borrarLinea(${i})">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('lineas-badge').textContent = lineas.length;
+}
+
+function borrarLinea(i) {
+  lineas.splice(i, 1);
+  renderTabla();
+  actualizarSummary();
+}
+
+function actualizarSummary() {
+  const conPrecio = lineas.filter(l => l.precioUnit > 0).length;
+  const total = lineas.reduce((s, l) => s + l.cantidad * l.precioUnit, 0);
+  document.getElementById('cnt-total').textContent = lineas.length;
+  document.getElementById('cnt-precio').textContent = conPrecio;
+  document.getElementById('cnt-total-val').textContent = total > 0
+    ? total.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : '—';
+}
+
+function volverPaso1() {
+  setStep(1);
+  hideStatus();
+  document.getElementById('btn-cargar').disabled = false;
+}
+
+async function iniciarCarga() {
+  const nombre = document.getElementById('oferta-nombre').value.trim();
+  const proveedor = document.getElementById('oferta-proveedor').value;
+  const proyecto = document.getElementById('oferta-proyecto').value;
+  const version = document.getElementById('oferta-version').value.trim();
+  const fecha = document.getElementById('oferta-fecha').value;
+  const estado = document.getElementById('oferta-estado').value;
+  const numero = document.getElementById('oferta-numero').value.trim();
+
+  if (!nombre) { showStatus('Falta el nombre de la oferta.', 'warning'); return; }
+  if (!proveedor) { showStatus('Seleccioná un proveedor.', 'warning'); return; }
+  if (!proyecto) { showStatus('Seleccioná un proyecto.', 'warning'); return; }
+
+  document.getElementById('btn-cargar').disabled = true;
+  showStatus('Creando registro de oferta en Airtable...', 'info', true);
+
+  try {
+    const campos = { 'Nombre oferta': nombre };
+    if (proveedor) campos['Proveedor'] = [proveedor];
+    if (proyecto) campos['Proyecto'] = [proyecto];
+    if (version) campos['Versión'] = version;
+    if (fecha) campos['Fecha oferta'] = fecha;
+    if (estado) campos['Status oferta'] = estado;
+    if (numero) campos['Número oferta'] = numero;
+
+    const ofertaRes = await airtableFetch(BASE + '/' + TBL_OFERTAS, {
+      method: 'POST',
+      body: JSON.stringify({ fields: campos })
+    });
+
+    if (ofertaRes.error) throw new Error(ofertaRes.error.message || 'Error al crear oferta');
+    ofertaId = ofertaRes.id;
+
+    setStep(3);
+    await cargarLineas();
+
+  } catch(e) {
+    showStatus('Error: ' + e.message, 'error');
+    document.getElementById('btn-cargar').disabled = false;
+  }
+}
+
+async function cargarLineas() {
+  const tbody = document.getElementById('resultado-body');
+  tbody.innerHTML = '';
+
+  lineas.forEach((l, i) => {
+    const tr = document.createElement('tr');
+    tr.id = 'rres-' + i;
+    tr.innerHTML = `
+      <td><span class="row-status loading" id="rst-${i}"></span></td>
+      <td>${l.nombreComun || l.nombreCientifico}</td>
+      <td>${tipoTag(l.tipo)}</td>
+      <td>${l.precioUnit > 0 ? l.precioUnit.toFixed(2) + ' ' + l.moneda : '—'}</td>
+      <td>${(l.cantidad * l.precioUnit).toFixed(2)}</td>
+      <td id="rdet-${i}" style="font-size:11px;color:var(--gray-mid)">Esperando...</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  let ok = 0, err = 0;
+  const BATCH = 10;
+
+  for (let i = 0; i < lineas.length; i += BATCH) {
+    const batch = lineas.slice(i, i + BATCH);
+    const records = batch.map(l => {
+      const f = {};
+      if (ofertaId) f['Oferta'] = [ofertaId];
+      if (l.nombreComun) f['Nombre común'] = l.nombreComun;
+      if (l.nombreCientifico) f['Nombre científico'] = l.nombreCientifico;
+      if (l.tamano) f['Tamaño/altura'] = l.tamano;
+      if (l.cantidad) f['Cantidad'] = l.cantidad;
+      if (l.precioUnit) f['Precio unitario'] = l.precioUnit;
+      if (l.moneda) f['Moneda'] = l.moneda;
+      if (l.tipo) f['Tipo'] = l.tipo;
+      if (l.notas) f['Notas/Comentari'] = l.notas;
+      return { fields: f };
+    });
+
+    try {
+      const res = await airtableFetch(BASE + '/' + TBL_LINEAS, {
+        method: 'POST',
+        body: JSON.stringify({ records })
+      });
+
+      if (res.error) throw new Error(res.error.message);
+
+      batch.forEach((_, bi) => {
+        const idx = i + bi;
+        document.getElementById('rst-' + idx).className = 'row-status ok';
+        document.getElementById('rdet-' + idx).textContent = 'Cargada ✓';
+        ok++;
+        const pct = Math.round((ok + err) / lineas.length * 100);
+        document.getElementById('prog-fill').style.width = pct + '%';
+        document.getElementById('res-ok').textContent = ok;
+        document.getElementById('res-total').textContent = ok + err;
+      });
+
+    } catch(e) {
+      batch.forEach((_, bi) => {
+        const idx = i + bi;
+        document.getElementById('rst-' + idx).className = 'row-status err';
+        document.getElementById('rdet-' + idx).textContent = e.message;
+        err++;
+      });
+    }
+
+    await new Promise(r => setTimeout(r, 200));
+  }
+
+  document.getElementById('res-err').textContent = err;
+
+  if (err === 0) {
+    showStatus('¡' + ok + ' líneas cargadas correctamente en Airtable!', 'success');
+  } else {
+    showStatus(ok + ' líneas OK · ' + err + ' con error. Revisá los detalles arriba.', 'warning');
+  }
+}
+
+function nuevaOferta() {
+  lineas = [];
+  ofertaId = null;
+  document.getElementById('oferta-nombre').value = '';
+  document.getElementById('oferta-numero').value = '';
+  document.getElementById('oferta-version').value = '';
+  document.getElementById('oferta-fecha').value = '';
+  document.getElementById('raw-text').value = '';
+  document.getElementById('tabla-body').innerHTML = '';
+  document.getElementById('resultado-body').innerHTML = '';
+  document.getElementById('prog-fill').style.width = '0%';
+  hideStatus();
+  setStep(1);
+}
+
+async function cargarProyectos() {
+  const sel = document.getElementById('oferta-proyecto');
+  try {
+    const data = await airtableFetch(BASE + '/' + TBL_PROYECTOS + '?fields[]=Nombre+del+proyecto');
+    sel.innerHTML = '<option value="">Seleccioná un proyecto</option>';
+    (data.records || []).forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.fields['Nombre del proyecto'] || r.id;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    sel.innerHTML = '<option value="">Error al cargar proyectos</option>';
+  }
+}
+
+function copiarPrompt() {
+  const txt = document.getElementById('prompt-claude').innerText;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.getElementById('btn-copiar');
+    btn.textContent = '✓ Copiado — pegalo en Claude junto con el PDF';
+    setTimeout(() => btn.textContent = 'Copiar prompt →', 3000);
+  });
+}
+
+cargarProveedores();
+cargarProyectos();
+document.getElementById('oferta-fecha').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
