@@ -546,19 +546,23 @@
 | Nombre común | Nombre científico | Tipo | Tamaño | Cantidad | Precio unitario | Moneda |
 
 Reglas OBLIGATORIAS:
-- El orden de columnas debe ser EXACTAMENTE ese — no cambies el orden
-- Tipo debe ser: Árbol, Planta, Cobertura, Sustrato, MO o Transporte
-- Cantidad es OBLIGATORIA — si no está en el PDF poné 1
-- Precio unitario es el precio por unidad, sin IVA
+- El orden de columnas debe ser EXACTAMENTE ese — no cambies el orden nunca
+- Tipo debe ser exactamente una de estas opciones: Árbol, Planta, Cobertura, Sustrato, MO, Transporte
+- Cantidad: usá el TOTAL DE MATERIAL o cantidad total de unidades (no la densidad por m2)
+- Precio unitario: usá el precio unitario llave en mano o precio por unidad, SIN IVA
+- Si hay precio con IVA y sin IVA, siempre usá el precio SIN IVA
 - Moneda: USD o CRC
-- Incluí todas las secciones: plantas, árboles, coberturas, sustrato, mano de obra, transporte
-- Sin filas de encabezado repetidas, sin fila de totales, solo los datos
-- Sin texto antes ni después de la tabla
+- Incluí TODAS las secciones: árboles, plantas, coberturas, sustrato, mano de obra, transporte
+- Mano de obra y transporte van como líneas separadas con Tipo MO y Transporte
+- Sin encabezados repetidos, sin totales, sin subtotales — solo líneas de datos
+- Sin ningún texto antes ni después de la tabla
 
-Ejemplo de formato correcto:
-| Cedro María | Calophyllum brasiliense | Árbol | 150-200 cm | 4 | 30.74 | USD |
-| Coralillo | Hamelia Patens | Planta | 60-80 cm | 109 | 3.59 | USD |
-| Wedelia | Chagneticola trilobata | Cobertura | 10-15 cm | 500 | 0.30 | USD |</div>
+Ejemplo correcto:
+| Cedro María | Calophyllum brasiliense | Árbol | 150-200 cm | 4 | 70.93 | USD |
+| Wedelia | Wedelia Trilobata | Cobertura | 10-15 cm | 6282 | 1.58 | USD |
+| Geotextil | GNT | Sustrato | M2 | 270 | 3.94 | USD |
+| Mano de obra | - | MO | | 1 | 6920.64 | USD |
+| Transporte | - | Transporte | | 1 | 4270.20 | USD |</div>
       <button class="btn btn-secondary" onclick="copiarPrompt()" id="btn-copiar" style="margin-bottom:16px">Copiar prompt →</button>
 
       <div class="card-title" style="margin-bottom:12px">Paso 2 — Pegá la respuesta de Claude aquí</div>
@@ -676,6 +680,7 @@ const TBL_OFERTAS = 'tblJpiKTlPajacHN7';
 const TBL_LINEAS = 'tbldvqTWGzYyQ1w5F';
 const TBL_PROVEEDORES = 'tblIMzPqPQQOZKmYe';
 const TBL_PROYECTOS = 'tblyusZHrEpAz3NkB';
+const TBL_CATALOGO = 'tblS8r7QHBVHinz8u';
 
 let lineas = [];
 let ofertaId = null;
@@ -893,6 +898,7 @@ function parsearTabla() {
   renderTabla();
   actualizarSummary();
   setStep(2);
+  document.getElementById('btn-cargar').disabled = false;
   setTimeout(hideStatus, 3000);
 }
 
@@ -1008,6 +1014,7 @@ function actualizarSummary() {
 function volverPaso1() {
   setStep(1);
   hideStatus();
+  document.getElementById('btn-cargar').disabled = false;
 }
 
 async function iniciarCarga() {
@@ -1052,6 +1059,41 @@ async function iniciarCarga() {
   }
 }
 
+async function buscarOCrearEspecie(nombreComun, nombreCientifico, tipo, tamano) {
+  try {
+    const searchName = (nombreCientifico || nombreComun || '').trim();
+    if (!searchName) return null;
+
+    const searchField = nombreCientifico ? 'Nombre científico' : 'Nombre común';
+    const encoded = encodeURIComponent(searchName);
+    const sciEnc = encodeURIComponent(nombreCientifico || '');
+    const comEnc = encodeURIComponent(nombreComun || '');
+    const formula = encodeURIComponent('OR({Nombre cientifico}="' + (nombreCientifico||'') + '",{Nombre comun}="' + (nombreComun||'') + '")');
+    const searchRes = await airtableFetch(
+      BASE + '/' + TBL_CATALOGO + '?filterByFormula=' + formula + '&maxRecords=1'
+    );
+
+    if (searchRes.records && searchRes.records.length > 0) {
+      return searchRes.records[0].id;
+    }
+
+    const newFields = {};
+    if (nombreComun) newFields['Nombre común'] = nombreComun;
+    if (nombreCientifico) newFields['Nombre Científico'] = nombreCientifico;
+    if (tamano) newFields['Tamaño referencia'] = tamano;
+
+    const createRes = await airtableFetch(BASE + '/' + TBL_CATALOGO, {
+      method: 'POST',
+      body: JSON.stringify({ fields: newFields })
+    });
+
+    if (createRes.id) return createRes.id;
+    return null;
+  } catch(e) {
+    return null;
+  }
+}
+
 async function cargarLineas() {
   const tbody = document.getElementById('resultado-body');
   tbody.innerHTML = '';
@@ -1075,7 +1117,7 @@ async function cargarLineas() {
 
   for (let i = 0; i < lineas.length; i += BATCH) {
     const batch = lineas.slice(i, i + BATCH);
-    const records = batch.map(l => {
+    const records = await Promise.all(batch.map(async l => {
       const f = {};
       if (ofertaId) f['Oferta'] = [ofertaId];
       if (l.nombreComun) f['Nombre común'] = l.nombreComun;
@@ -1086,8 +1128,10 @@ async function cargarLineas() {
       if (l.moneda) f['Moneda'] = l.moneda;
       if (l.tipo) f['Tipo'] = l.tipo;
       if (l.notas) f['Notas/Comentari'] = l.notas;
+      const especieId = await buscarOCrearEspecie(l.nombreComun, l.nombreCientifico, l.tipo, l.tamano);
+      if (especieId) f['Especie'] = [especieId];
       return { fields: f };
-    });
+    }));
 
     try {
       const res = await airtableFetch(BASE + '/' + TBL_LINEAS, {
