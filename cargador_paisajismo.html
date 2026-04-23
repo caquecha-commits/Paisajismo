@@ -464,6 +464,12 @@
   </div>
 </header>
 
+<div style="background:var(--green-deep);padding:8px 40px;display:flex;gap:24px">
+  <a href="#cargador" onclick="showSection('cargador')" id="nav-cargador" style="color:var(--green-light);font-size:12px;font-family:var(--mono);text-decoration:none;padding:4px 0;border-bottom:2px solid var(--green-light)">Cargador de ofertas</a>
+  <a href="#comparativa" onclick="showSection('comparativa')" id="nav-comparativa" style="color:rgba(255,255,255,0.6);font-size:12px;font-family:var(--mono);text-decoration:none;padding:4px 0;border-bottom:2px solid transparent">Comparativa de precios</a>
+</div>
+
+<div id="page-cargador">
 <div class="main">
 
   <div class="step-indicator">
@@ -672,8 +678,52 @@ Ejemplo correcto:
   </div>
 
 </div>
+</div>
+
+<div id="page-comparativa" style="display:none">
+<div class="main">
+  <div class="section-label">Comparativa de precios por especie y proveedor</div>
+
+  <div class="card">
+    <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+      <div>
+        <label>Proyecto</label>
+        <select id="comp-proyecto" onchange="renderComparativa()" style="min-width:200px">
+          <option value="">Todos los proyectos</option>
+        </select>
+      </div>
+      <div>
+        <label>Tipo</label>
+        <select id="comp-tipo" onchange="renderComparativa()">
+          <option value="">Todos los tipos</option>
+          <option value="Árbol">Árboles</option>
+          <option value="Planta">Plantas</option>
+          <option value="Cobertura">Coberturas</option>
+          <option value="Sustrato">Sustrato</option>
+          <option value="MO">Mano de obra</option>
+          <option value="Transporte">Transporte</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="cargarComparativa()" id="btn-comp">Cargar datos →</button>
+    </div>
+  </div>
+
+  <div id="comp-resultado" style="margin-top:4px">
+    <p style="color:var(--gray-mid);padding:24px;text-align:center;font-size:13px">Hacé clic en "Cargar datos" para ver la comparativa</p>
+  </div>
+</div>
+</div>
 
 <script>
+function showSection(section) {
+  document.getElementById('page-cargador').style.display = section === 'cargador' ? 'block' : 'none';
+  document.getElementById('page-comparativa').style.display = section === 'comparativa' ? 'block' : 'none';
+  document.getElementById('nav-cargador').style.color = section === 'cargador' ? 'var(--green-light)' : 'rgba(255,255,255,0.6)';
+  document.getElementById('nav-comparativa').style.color = section === 'comparativa' ? 'var(--green-light)' : 'rgba(255,255,255,0.6)';
+  document.getElementById('nav-cargador').style.borderBottomColor = section === 'cargador' ? 'var(--green-light)' : 'transparent';
+  document.getElementById('nav-comparativa').style.borderBottomColor = section === 'comparativa' ? 'var(--green-light)' : 'transparent';
+}
+
 const TOKEN = 'patuOM1Q2aDqG2uPd.b3afefaed951ca583d025e78b18b6190b708623bc111ebf340e5d786ddcd9535';
 const BASE = 'appfsrASQlNSOye1w';
 const TBL_OFERTAS = 'tblJpiKTlPajacHN7';
@@ -1216,6 +1266,254 @@ function copiarPrompt() {
 cargarProveedores();
 cargarProyectos();
 document.getElementById('oferta-fecha').value = new Date().toISOString().split('T')[0];
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════
+// COMPARATIVA DE PRECIOS
+// ══════════════════════════════════════════════════════
+
+let compData = { lineas: [], ofertas: [], proyectos: [], proveedores: [] };
+
+async function cargarComparativa() {
+  const btn = document.getElementById('btn-comp');
+  if (btn) btn.textContent = 'Cargando...';
+  
+  try {
+    // Load all lineas with oferta info
+    let allLineas = [];
+    let offset = null;
+    do {
+      const url = BASE + '/' + TBL_LINEAS + '?pageSize=100' + (offset ? '&offset=' + offset : '');
+      const res = await airtableFetch(url);
+      allLineas = allLineas.concat(res.records || []);
+      offset = res.offset;
+    } while (offset);
+
+    // Load all ofertas
+    let allOfertas = [];
+    offset = null;
+    do {
+      const url = BASE + '/' + TBL_OFERTAS + '?pageSize=100' + (offset ? '&offset=' + offset : '');
+      const res = await airtableFetch(url);
+      allOfertas = allOfertas.concat(res.records || []);
+      offset = res.offset;
+    } while (offset);
+
+    // Load all proveedores
+    const provRes = await airtableFetch(BASE + '/' + TBL_PROVEEDORES + '?fields[]=Proveedor');
+    const provMap = {};
+    (provRes.records || []).forEach(r => { provMap[r.id] = r.fields['Proveedor'] || r.id; });
+
+    // Load all proyectos
+    const proyRes = await airtableFetch(BASE + '/' + TBL_PROYECTOS + '?fields[]=Nombre+del+proyecto');
+    const proyMap = {};
+    (proyRes.records || []).forEach(r => { proyMap[r.id] = r.fields['Nombre del proyecto'] || r.id; });
+
+    // Build oferta map with proveedor and proyecto names
+    const ofertaMap = {};
+    allOfertas.forEach(o => {
+      const provIds = o.fields['Proveedor'] || [];
+      const proyIds = o.fields['Proyecto'] || [];
+      ofertaMap[o.id] = {
+        nombre: o.fields['Nombre oferta'] || '',
+        proveedor: provMap[provIds[0]] || 'Sin proveedor',
+        proyecto: proyMap[proyIds[0]] || 'Sin proyecto',
+        proveedorId: provIds[0] || '',
+        proyectoId: proyIds[0] || '',
+      };
+    });
+
+    compData.lineas = allLineas;
+    compData.ofertaMap = ofertaMap;
+    compData.proyMap = proyMap;
+    compData.provMap = provMap;
+
+    // Fill proyecto filter
+    const proySelect = document.getElementById('comp-proyecto');
+    proySelect.innerHTML = '<option value="">Todos los proyectos</option>';
+    Object.entries(proyMap).forEach(([id, nombre]) => {
+      proySelect.innerHTML += '<option value="' + id + '">' + nombre + '</option>';
+    });
+
+    renderComparativa();
+    if (btn) btn.textContent = 'Actualizar datos';
+  } catch(e) {
+    document.getElementById('comp-resultado').innerHTML = '<p style="color:var(--red);padding:16px">Error cargando datos: ' + e.message + '</p>';
+    if (btn) btn.textContent = 'Reintentar';
+  }
+}
+
+function renderComparativa() {
+  const proyFiltro = document.getElementById('comp-proyecto').value;
+  const tipoFiltro = document.getElementById('comp-tipo').value;
+  const { lineas, ofertaMap, proyMap, provMap } = compData;
+
+  // Filter lineas
+  let filtered = lineas.filter(l => {
+    const ofertaIds = l.fields['Oferta'] || [];
+    const oferta = ofertaMap[ofertaIds[0]];
+    if (!oferta) return false;
+    if (proyFiltro && oferta.proyectoId !== proyFiltro) return false;
+    if (tipoFiltro && l.fields['Tipo'] !== tipoFiltro) return false;
+    return true;
+  });
+
+  // Get unique proveedores in filtered data
+  const provSet = new Set();
+  filtered.forEach(l => {
+    const ofertaIds = l.fields['Oferta'] || [];
+    const oferta = ofertaMap[ofertaIds[0]];
+    if (oferta) provSet.add(oferta.proveedor);
+  });
+  const proveedores = Array.from(provSet).sort();
+
+  // Group by especie (nombre comun + cientifico)
+  const especieMap = {};
+  filtered.forEach(l => {
+    const ofertaIds = l.fields['Oferta'] || [];
+    const oferta = ofertaMap[ofertaIds[0]];
+    if (!oferta) return;
+    const key = (l.fields['Nombre científico'] || l.fields['Nombre común'] || 'Sin nombre').trim();
+    const tipo = l.fields['Tipo'] || 'Sin tipo';
+    if (!especieMap[key]) {
+      especieMap[key] = {
+        nombreComun: l.fields['Nombre común'] || '',
+        nombreCientifico: l.fields['Nombre científico'] || '',
+        tipo: tipo,
+        precios: {}
+      };
+    }
+    const prov = oferta.proveedor;
+    if (!especieMap[key].precios[prov]) {
+      especieMap[key].precios[prov] = { unitario: [], cantidad: 0 };
+    }
+    especieMap[key].precios[prov].unitario.push(parseFloat(l.fields['Precio unitario'] || 0));
+    especieMap[key].precios[prov].cantidad = parseFloat(l.fields['Cantidad'] || 0);
+  });
+
+  // Group by tipo
+  const tipoGroups = {};
+  Object.values(especieMap).forEach(e => {
+    if (!tipoGroups[e.tipo]) tipoGroups[e.tipo] = [];
+    tipoGroups[e.tipo].push(e);
+  });
+
+  if (Object.keys(tipoGroups).length === 0) {
+    document.getElementById('comp-resultado').innerHTML = '<p style="color:var(--gray-mid);padding:16px;text-align:center">No hay datos para los filtros seleccionados</p>';
+    return;
+  }
+
+  // Build HTML table
+  let html = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
+  
+  // Header
+  html += '<thead><tr>';
+  html += '<th style="background:var(--green-deep);color:white;padding:8px 12px;text-align:left;white-space:nowrap">Nombre científico</th>';
+  html += '<th style="background:var(--green-deep);color:white;padding:8px 12px;text-align:left;white-space:nowrap">Nombre común</th>';
+  html += '<th style="background:var(--green-deep);color:white;padding:8px 12px;text-align:center">Cant.</th>';
+  proveedores.forEach(p => {
+    html += '<th style="background:var(--green-mid);color:white;padding:8px 12px;text-align:center;white-space:nowrap" colspan="2">' + p + '</th>';
+  });
+  html += '<th style="background:var(--green-deep);color:white;padding:8px 12px;text-align:center">Mejor precio</th>';
+  html += '</tr>';
+  
+  // Subheader for proveedores
+  html += '<tr>';
+  html += '<th style="background:#2d4a3a;color:#9fe1cb;padding:5px 12px;font-size:10px"></th>';
+  html += '<th style="background:#2d4a3a;color:#9fe1cb;padding:5px 12px;font-size:10px"></th>';
+  html += '<th style="background:#2d4a3a;color:#9fe1cb;padding:5px 12px;font-size:10px"></th>';
+  proveedores.forEach(p => {
+    html += '<th style="background:#2d4a3a;color:#9fe1cb;padding:5px 8px;font-size:10px;text-align:center">Unit.</th>';
+    html += '<th style="background:#2d4a3a;color:#9fe1cb;padding:5px 8px;font-size:10px;text-align:center">Total</th>';
+  });
+  html += '<th style="background:#2d4a3a;color:#9fe1cb;padding:5px 12px;font-size:10px"></th>';
+  html += '</tr></thead><tbody>';
+
+  // Totals per proveedor
+  const totalesProv = {};
+  proveedores.forEach(p => totalesProv[p] = 0);
+
+  let rowIdx = 0;
+  Object.entries(tipoGroups).sort().forEach(([tipo, especies]) => {
+    // Section header
+    const typeColors = {
+      'Árbol': '#1B5E20', 'Planta': '#2E7D32', 'Cobertura': '#E65100',
+      'Sustrato': '#4A148C', 'MO': '#1565C0', 'Transporte': '#37474F'
+    };
+    const bgColor = typeColors[tipo] || '#37474F';
+    html += '<tr><td colspan="' + (3 + proveedores.length * 2 + 1) + '" style="background:' + bgColor + ';color:white;padding:6px 12px;font-weight:500;font-size:11px;letter-spacing:0.08em">' + tipo.toUpperCase() + '</td></tr>';
+
+    especies.sort((a,b) => (a.nombreComun||'').localeCompare(b.nombreComun||'')).forEach(especie => {
+      const rowBg = rowIdx % 2 === 0 ? 'white' : '#f7f7f5';
+      rowIdx++;
+
+      // Find best price
+      let minPrecio = Infinity;
+      let mejorProv = '';
+      proveedores.forEach(p => {
+        if (especie.precios[p]) {
+          const avg = especie.precios[p].unitario.reduce((a,b) => a+b, 0) / especie.precios[p].unitario.length;
+          if (avg < minPrecio) { minPrecio = avg; mejorProv = p; }
+        }
+      });
+
+      html += '<tr style="background:' + rowBg + '">';
+      html += '<td style="padding:7px 12px;color:#1a1a1a;border-bottom:1px solid #eee;font-style:italic">' + (especie.nombreCientifico || '') + '</td>';
+      html += '<td style="padding:7px 12px;color:#1a1a1a;border-bottom:1px solid #eee">' + (especie.nombreComun || '') + '</td>';
+      
+      // Get quantity (use first available)
+      const primerProv = Object.keys(especie.precios)[0];
+      const cant = primerProv ? especie.precios[primerProv].cantidad : 0;
+      html += '<td style="padding:7px 8px;text-align:center;border-bottom:1px solid #eee">' + (cant || '') + '</td>';
+
+      proveedores.forEach(p => {
+        if (especie.precios[p]) {
+          const avg = especie.precios[p].unitario.reduce((a,b) => a+b, 0) / especie.precios[p].unitario.length;
+          const total = avg * cant;
+          totalesProv[p] += total;
+          const isBest = p === mejorProv;
+          const cellBg = isBest ? '#d8f3dc' : rowBg;
+          const cellColor = isBest ? '#1B5E20' : '#1a1a1a';
+          html += '<td style="padding:7px 8px;text-align:right;border-bottom:1px solid #eee;background:' + cellBg + ';color:' + cellColor + ';font-weight:' + (isBest?'500':'400') + '">$' + avg.toFixed(2) + '</td>';
+          html += '<td style="padding:7px 8px;text-align:right;border-bottom:1px solid #eee;background:' + cellBg + ';color:' + cellColor + '">$' + total.toFixed(2) + '</td>';
+        } else {
+          html += '<td style="padding:7px 8px;text-align:center;border-bottom:1px solid #eee;color:#ccc">—</td>';
+          html += '<td style="padding:7px 8px;text-align:center;border-bottom:1px solid #eee;color:#ccc">—</td>';
+        }
+      });
+
+      html += '<td style="padding:7px 8px;text-align:center;border-bottom:1px solid #eee;color:#1B5E20;font-weight:500">' + (mejorProv || '—') + '</td>';
+      html += '</tr>';
+    });
+  });
+
+  // Totals row
+  html += '<tr style="background:var(--green-deep)">';
+  html += '<td colspan="3" style="padding:10px 12px;color:white;font-weight:500">TOTAL</td>';
+  let minTotal = Infinity;
+  let mejorProvTotal = '';
+  proveedores.forEach(p => {
+    if (totalesProv[p] < minTotal) { minTotal = totalesProv[p]; mejorProvTotal = p; }
+  });
+  proveedores.forEach(p => {
+    const isBest = p === mejorProvTotal;
+    html += '<td style="padding:10px 8px;color:' + (isBest?'#9fe1cb':'white') + ';font-weight:' + (isBest?'700':'400') + ';text-align:right" colspan="2">$' + totalesProv[p].toFixed(2) + '</td>';
+  });
+  html += '<td style="padding:10px 8px;color:#9fe1cb;font-weight:500;text-align:center">' + mejorProvTotal + '</td>';
+  html += '</tr>';
+
+  html += '</tbody></table></div>';
+
+  // Best provider summary
+  html += '<div style="margin-top:16px;padding:14px 18px;background:var(--green-ghost);border:1px solid var(--green-pale);border-radius:8px;font-size:13px">';
+  html += '<span style="font-weight:500;color:var(--green-deep)">Mejor proveedor overall: </span>';
+  html += '<span style="color:var(--green-mid);font-weight:500">' + mejorProvTotal + '</span>';
+  html += '<span style="color:var(--gray-mid)"> — Total: $' + minTotal.toFixed(2) + '</span>';
+  html += '</div>';
+
+  document.getElementById('comp-resultado').innerHTML = html;
+}
 </script>
 </body>
 </html>
